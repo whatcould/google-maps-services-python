@@ -425,6 +425,69 @@ def _places(
     return client._request(url, params)
 
 
+def v1_search_nearby(
+    client,
+    fields,
+    center,
+    radius=1000,
+    max_result_count=None,
+    language_code=None,
+    rank_preference=None,
+    included_types=None,
+    region=None
+):
+
+    """
+    A Nearby Search (New) request takes one or more place types, and returns a list of matching places within the specified area. A field mask specifying one or more data types is required.
+
+    :param fields: [required] Specify the list of fields to return in the response.
+    :type center: list
+
+    :param center: [required] The latitude/longitude value for which you wish to obtain the closest, human-readable address. latitude & longitude
+    :type center: dict
+
+    :param radius: Distance in meters within which to bias results.
+    :type radius: int
+
+    :param max_result_count: Specifies the maximum number of place results to return. Must be between 1 and 20 (default) inclusive.
+    :type radius: int
+
+    :param language_code: The language in which to return results.
+    :type language_code: string
+
+    :param rank_preference: The type of ranking to use. If this parameter is omitted, results are ranked by popularity. POPULARITY or DISTANCE
+    :type rank_preference: string
+
+    :param included_types: Restricts the results to places matching the specified type.
+        The full list of supported types is available here:
+        https://developers.google.com/maps/documentation/places/web-service/place-types#table-a
+    :type type: list
+
+    :param region: The region code used to format the response, specified as a two-character CLDR code value.
+        See more @ https://developers.google.com/places/web-service/search
+    :type region: string
+
+    """
+
+    params = {"fields": convert.join_list(",", fields)}
+
+    json_params = {"locationRestriction": {"circle": {"center": center, "radius": radius}}}
+
+    if max_result_count:
+        json_params["maxResultCount"] = max_result_count
+    if language_code:
+        json_params["languageCode"] = language_code
+    if region:
+        json_params["regionCode"] = region
+    if rank_preference:
+        json_params["rankPreference"] = rank_preference
+    if included_types:
+        json_params["includedTypes"] = included_types
+
+    url = "/v1/places:searchNearby"
+    return client._request(url, params=params, post_json=json_params, base_url="https://places.googleapis.com")
+
+
 def place(
     client,
     place_id,

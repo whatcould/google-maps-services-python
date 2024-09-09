@@ -58,7 +58,7 @@ class Client:
                  timeout=None, connect_timeout=None, read_timeout=None,
                  retry_timeout=60, requests_kwargs=None,
                  queries_per_second=60, queries_per_minute=6000,channel=None,
-                 retry_over_query_limit=True, experience_id=None, 
+                 retry_over_query_limit=True, experience_id=None,
                  requests_session=None,
                  base_url=_DEFAULT_BASE_URL):
         """
@@ -130,7 +130,7 @@ class Client:
 
         :param requests_session: Reused persistent session for flexibility.
         :type requests_session: requests.Session
-        
+
         :param base_url: The base URL for all requests. Defaults to the Maps API
             server. Should not have a trailing slash.
         :type base_url: string
@@ -179,10 +179,10 @@ class Client:
             "timeout": self.timeout,
             "verify": True,  # NOTE(cbro): verify SSL certs.
         })
-        
+
         self.queries_per_second = queries_per_second
         self.queries_per_minute = queries_per_minute
-        try: 
+        try:
             if (type(self.queries_per_second) == int and type(self.queries_per_minute) == int ):
                 self.queries_quota =  math.floor(min(self.queries_per_second, self.queries_per_minute/60))
             elif (self.queries_per_second and type(self.queries_per_second) == int ):
@@ -281,7 +281,7 @@ class Client:
 
         if base_url is None:
             base_url = self.base_url
-            
+
         if not first_request_time:
             first_request_time = datetime.now()
 
@@ -358,13 +358,16 @@ class Client:
 
         body = response.json()
 
-        api_status = body["status"]
-        if api_status == "OK" or api_status == "ZERO_RESULTS":
-            return body
+        if "status" in body:
+            api_status = body["status"]
+            if api_status == "OK" or api_status == "ZERO_RESULTS":
+                return body
 
-        if api_status == "OVER_QUERY_LIMIT":
-            raise googlemaps.exceptions._OverQueryLimit(
-                api_status, body.get("error_message"))
+            if api_status == "OVER_QUERY_LIMIT":
+                raise googlemaps.exceptions._OverQueryLimit(
+                    api_status, body.get("error_message"))
+        else:
+            return body
 
         raise googlemaps.exceptions.ApiError(api_status,
                                              body.get("error_message"))
@@ -426,6 +429,7 @@ from googlemaps.places import place
 from googlemaps.places import places_photo
 from googlemaps.places import places_autocomplete
 from googlemaps.places import places_autocomplete_query
+from googlemaps.places import v1_search_nearby
 from googlemaps.maps import static_map
 from googlemaps.addressvalidation import addressvalidation
 
@@ -464,6 +468,7 @@ Client.nearest_roads = make_api_method(nearest_roads)
 Client.speed_limits = make_api_method(speed_limits)
 Client.snapped_speed_limits = make_api_method(snapped_speed_limits)
 Client.find_place = make_api_method(find_place)
+Client.v1_search_nearby = make_api_method(v1_search_nearby)
 Client.places = make_api_method(places)
 Client.places_nearby = make_api_method(places_nearby)
 Client.place = make_api_method(place)
